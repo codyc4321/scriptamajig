@@ -5,7 +5,11 @@ from scriptamajig.main import (
     is_category_name,
     is_category_name_ending_here,
     is_alias,
-    is_bash_function
+    is_bash_function,
+    is_script,
+    is_filepath,
+    gather_names_to_substitute,
+    construct_full_filepath,
 )
 
 
@@ -44,6 +48,46 @@ class TestParsingFunctions(unittest.TestCase):
     def test_is_bash_function_for_none(self):
         result = is_bash_function("blah blah blah")
         self.assertIsNone(result)
+
+    def test_is_script(self):
+
+        self.run_assert_equal(
+            is_script,
+            "alias nsh='$CODE_META_SCRIPTS_PATH/newshell.sh'",
+            "sh"
+        )
+
+        self.run_assert_equal(
+            is_script,
+            "alias nsh='$CODE_META_SCRIPTS_PATH/newshell.py'",
+            "py"
+        )
+
+        self.run_assert_equal(
+            is_script,
+            "alias nsh='$CODE_META_SCRIPTS_PATH/newshell.rb'",
+            "rb"
+        )
+
+    def test_is_filepath(self):
+        result = is_filepath('GITFLOW_AUTOMATION_SCRIPTS="$GITFLOW_AUTOMATION_PATH/scripts"')
+        self.assertEqual(
+            result,
+            {'name': 'GITFLOW_AUTOMATION_SCRIPTS', 'path': "$GITFLOW_AUTOMATION_PATH/scripts"}
+        )
+
+    def test_gather_names_to_substitute(self):
+        result = gather_names_to_substitute("$ONE/blah/blahhhh/$TWO/$THREE")
+        self.assertEqual(result, ['ONE', 'TWO', 'THREE'])
+
+    def test_construct_full_filepath(self):
+        paths = {
+            'ONE': 'path/to/one',
+            'TWO': 'the/path/of/two',
+            'THREE': 'threes/path'
+        }
+        result = construct_full_filepath("$ONE/blah/blahhhh/$THREE/gap/$TWO", paths)
+        self.assertEqual(result, "path/to/one/blah/blahhhh/threes/path/gap/the/path/of/two")
 
     def run_assert_equal(self, callback, the_input, expectation):
         result = callback(the_input)

@@ -64,13 +64,35 @@ def is_bash_function(text):
     return parse_group(rgx, text)
 
 
-def is_python_function():
-    pass
+def is_script(text):
+    rgx = r"""[.](rb|py|sh)('|")\s*$"""
+    return parse_group(rgx, text)
 
 
-def is_filepath():
-    pass
+def is_filepath(text):
+    rgx = r"""^(?P<name>\w+)[=]('|")(?P<path>.*?)('|")$"""
+    match = re.search(rgx, text)
+    if match:
+        return {'name': match.group('name'), 'path': match.group('path')}
+    return None
 
+
+def gather_names_to_substitute(text):
+    rgx = r"[$]\w+"
+    matches = re.findall(rgx, text)
+    return map(lambda x: x.replace('$', ''), matches)
+
+
+def construct_full_filepath(text, filepaths_map):
+    # substitutes all the $NAMEs and whatnot
+    names = gather_names_to_substitute(text)
+    for name in names:
+        text = text.replace("$" + name, filepaths_map[name])
+    return text
+
+# def is_bash_var(text):
+#     # rgx = r"""^(?P<name>\w+)[=]('|")(?P<path>.*?)('|")$"""
+#     pass
 
 
 def run_parsers():
