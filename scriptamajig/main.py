@@ -104,7 +104,7 @@ def grab_single_line_match(text):
     return None
 
 
-def run_parsers(lines):
+def parse_bash_file(lines):
     # they have no category, or no home
     # orphaned_commands = []
     filepaths = {}
@@ -218,7 +218,7 @@ def expand_all_filepaths(filepaths):
 
 
 
-data = run_parsers(lines)
+data = parse_bash_file(lines)
 
 for key, value in sort_parsed_data(data['main_data']).items():
     print(key)
