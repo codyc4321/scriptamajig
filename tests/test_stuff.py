@@ -116,6 +116,16 @@ class TestParsingFunctions(unittest.TestCase):
             {'name': 'remakec', 'command': 'rm $1; make $1'}
         )
 
+        result = grab_single_line_match('MPOS_SILO_PATH="$MPOS_SCRIPTS_PATH/mousepositionsilo.sh"')
+        self.assertEqual(
+            result,
+            {'name': 'MPOS_SILO_PATH', 'path': '$MPOS_SCRIPTS_PATH/mousepositionsilo.sh'}
+        )
+
+    def test_grab_single_line_match_doesnt_grab_partial_match(self):
+        result = grab_single_line_match("mystart() { ")
+        self.assertIsNone(result)
+
     def run_assert_equal(self, callback, the_input, expectation):
         result = callback(the_input)
         self.assertEqual(result, expectation)

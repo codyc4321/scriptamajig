@@ -107,7 +107,6 @@ def grab_single_line_match(text):
     simple_single_line_parsers = [
         is_alias,
         is_single_line_bash_function,
-        is_script,
         is_filepath,
     ]
 
@@ -125,14 +124,6 @@ def run_parsers(lines):
     main_data = {}
 
     current_category = None
-
-    # these parsers match the line itself, then we can move on to next line
-    simple_single_line_parsers = [
-        is_alias,
-        is_single_line_bash_function,
-        is_script,
-        is_filepath,
-    ]
 
     for line in lines:
         category = is_category_name(line)
