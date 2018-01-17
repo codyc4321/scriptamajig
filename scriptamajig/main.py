@@ -23,6 +23,9 @@ MAPPER = {}
 def parse_group(rgx, text):
     match = re.search(rgx, text)
     # match.group() will throw an error if empty
+    print(match)
+    print(text)
+    print(match.groups())
     try:
         return match.groups()[0]
     except:
@@ -39,14 +42,9 @@ def is_category_name(text):
     return parse_group(rgx, text)
 
 
-assert is_category_name("# GIT*") == 'GIT'
-assert is_category_name("#GIT*") == 'GIT'
-assert is_category_name("  # GIT*") == 'GIT'
-
-
-
-def is_category_name_ending_here():
-    pass
+def is_category_name_ending_here(text):
+    rgx = r"\s*[#]\s*END\s*"
+    return bool(re.search(rgx, text))
 
 
 def is_alias(text):
@@ -64,11 +62,11 @@ def is_alias(text):
         return None
 
 
-assert is_alias("alias st='git status'  ") == {'name': 'st', 'command': 'git status'}
-
-
-def is_bash_function():
-    pass
+def is_bash_function(text):
+    print('huh')
+    rgx = r"""^(\w+)\s*[(][)]\s*[{]"""
+    # match = re.search(rgx, text)
+    return parse_group(rgx, text)
 
 
 def is_python_function():
