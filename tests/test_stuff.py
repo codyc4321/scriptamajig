@@ -6,6 +6,7 @@ from scriptamajig.main import (
     is_category_name_ending_here,
     is_alias,
     is_bash_function,
+    is_bash_function_end,
     is_single_line_bash_function,
     is_script,
     is_filepath,
@@ -51,6 +52,9 @@ class TestParsingFunctions(unittest.TestCase):
     def test_is_bash_function_for_none(self):
         result = is_bash_function("blah blah blah")
         self.assertIsNone(result)
+
+    def test_is_bash_function_end(self):
+        pass
 
     def test_is_single_line_bash_function(self):
         result = is_single_line_bash_function("cdwkproject() { cd $WORK_PROJECTS/$1; workon $1 ;}")

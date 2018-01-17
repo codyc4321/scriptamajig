@@ -16,7 +16,6 @@ alias goo="google-chrome"
 
 eval $(thefuck --alias)
 
-# Kodus]
 
 export PATH="/usr/local/opt/python/libexec/bin:$PATH"
 

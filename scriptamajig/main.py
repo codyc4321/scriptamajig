@@ -51,10 +51,9 @@ def is_alias(text):
         name = parse_group(name_rgx, text)
         command_rgx = r"[=](.*?)\s*$"
         command_raw = parse_group(command_rgx, text)
-        print(text)
         command_raw = command_raw.strip()
         command = command_raw[1:-1]
-        return {'name': name, 'command': command}
+        return {'type': 'alias', 'name': name, 'data': command}
     else:
         return None
 
@@ -64,11 +63,16 @@ def is_bash_function(text):
     return parse_group(rgx, text)
 
 
+def is_bash_function_end(text):
+    rgx = r"""^\s*[}]"""
+    return bool(re.search(rgx, text))
+
+
 def is_single_line_bash_function(text):
     rgx = r"""^(\w+)\s*[(][)]\s*[{](.*?)[}]"""
     match = re.search(rgx, text)
     try:
-        return {'name': match.groups()[0], 'command': match.groups()[1].rstrip(';').strip()}
+        return {'type': 'bash_func', 'name': match.groups()[0], 'data': match.groups()[1].rstrip(';').strip()}
     except:
         return None
 
@@ -82,26 +86,9 @@ def is_filepath(text):
     rgx = r"""^(?P<name>\w+)[=]('|")(?P<path>.*?)('|")$"""
     match = re.search(rgx, text)
     if match:
-        return {'name': match.group('name'), 'path': match.group('path')}
+        return {'type': 'path', 'name': match.group('name'), 'data': match.group('path')}
     return None
 
-
-def gather_names_to_substitute(text):
-    rgx = r"[$]\w+"
-    matches = re.findall(rgx, text)
-    return map(lambda x: x.replace('$', ''), matches)
-
-
-def construct_full_filepath(text, filepaths_map):
-    # substitutes all the $NAMEs and whatnot
-    names = gather_names_to_substitute(text)
-    for name in names:
-        text = text.replace("$" + name, filepaths_map[name])
-    return text
-
-# def is_bash_var(text):
-#     # rgx = r"""^(?P<name>\w+)[=]('|")(?P<path>.*?)('|")$"""
-#     pass
 
 def grab_single_line_match(text):
     simple_single_line_parsers = [
@@ -119,11 +106,14 @@ def grab_single_line_match(text):
 
 def run_parsers(lines):
     # they have no category, or no home
-    orphaned_commands = []
-    filepaths = []
-    main_data = {}
+    # orphaned_commands = []
+    filepaths = {}
+    main_data = {'orphans': [] }
 
     current_category = None
+
+    current_bash_func_name = None
+    current_bash_func_commands = ""
 
     for line in lines:
         category = is_category_name(line)
@@ -137,12 +127,103 @@ def run_parsers(lines):
                 current_category = None
                 continue
 
+        easy_match = grab_single_line_match(line)
+        if easy_match:
+            if easy_match['type'] == 'path':
+                filepaths[easy_match['name']] = easy_match['data']
+
+            try:
+                main_data[current_category].append(easy_match)
+            except:
+                main_data['orphans'].append(easy_match)
+        else:
+            print("No easy match")
+            bash_func_name = is_bash_function(line)
+            if bash_func_name:
+                current_bash_func_name = bash_func_name
+            else:
+                # do in else, because you dont want to add a line like
+                # 'mycmpushall() {' to the commands list
+                ends_bash_func = is_bash_function_end(line)
+                if ends_bash_func:
+                    if current_bash_func_name:
+                        this_bash_func = {
+                            'type': 'bash_func',
+                            'name': current_bash_func_name,
+                            'data': current_bash_func_commands
+                        }
+
+                        try:
+                            main_data[current_category].append(this_bash_func)
+                        except:
+                            main_data['orphans'].append(this_bash_func)
+
+                    current_bash_func_name = None
+                    current_bash_func_commands = ""
+                    continue
+
+                if current_bash_func_name:
+                    current_bash_func_commands += line.replace('\n', '') + "; "
 
 
+    return {'main_data': main_data, 'filepaths': filepaths}
 
 
+def sort_parsed_data(data):
+    sorted_data = {}
+    for key in data.keys():
+        sorted_data[key] = sorted(data[key], key=lambda k: k['name'])
+    return sorted_data
 
-    return {'main_data': main_data}
+
+#-------------------------------------------------------------------------
+# expand filepaths
+
+def gather_names_to_substitute(text):
+    rgx = r"[$]\w+"
+    matches = re.findall(rgx, text)
+    return map(lambda x: x.replace('$', ''), matches)
+
+
+def construct_full_filepath(text, filepaths_map):
+    # substitutes all the $NAMEs and whatnot
+    names = gather_names_to_substitute(text)
+    for name in names:
+        text = text.replace("$" + name, filepaths_map[name])
+    return text
+
+
+def expand_all_filepaths(filepaths):
+    HOME = os.path.expanduser('~')
+
+    home_expanded_paths = {}
+    for key, value in filepaths.items():
+        home_expanded_paths[key] = value.replace('$HOME', HOME)
+
+    # since some get an incomplete replacement (replacing '$CODE_META_SCRIPTS_PATH/ast' to '$SCRIPTS/code_meta/ast'),
+    # we do a second pass after this
+    intermediate_expanded_paths = {}
+    for key, value in home_expanded_paths.items():
+        # if key == 'AST_SCRIPTS_PATH':
+        #     import ipdb; ipdb.set_trace()
+        intermediate_expanded_paths[key] = construct_full_filepath(value, home_expanded_paths)
+
+    final_expanded_paths = {}
+    for key, value in intermediate_expanded_paths.items():
+        # if key == 'AST_SCRIPTS_PATH':
+        #     import ipdb; ipdb.set_trace()
+        final_expanded_paths[key] = construct_full_filepath(value, home_expanded_paths)
+
+    return final_expanded_paths
+
+
 
 data = run_parsers(lines)
-print(data)
+
+for key, value in sort_parsed_data(data['main_data']).items():
+    print(key)
+    print(value)
+    print('\n')
+    # time.sleep(3)
+
+print(expand_all_filepaths(data['filepaths']))
