@@ -33,6 +33,10 @@ class TestParsingFunctions(unittest.TestCase):
         result = is_alias("alias st='git status'  ")
         self.assertEqual(result,  {'name': 'st', 'command': 'git status'})
 
+    def test_is_alias_for_none(self):
+        result = is_alias(" st='git status'  ")
+        self.assertIsNone(result)
+
     def test_is_bash_function(self):
         result = is_bash_function("cdproject() { cd $HOME/projects/$1; workon $1 ;}")
         self.assertEqual(result,  "cdproject")
