@@ -11,6 +11,7 @@ from scriptamajig.main import (
     is_filepath,
     gather_names_to_substitute,
     construct_full_filepath,
+    grab_single_line_match,
 )
 
 
@@ -33,6 +34,7 @@ class TestParsingFunctions(unittest.TestCase):
         self.run_assert_true(is_category_name_ending_here, " # END ")
         self.run_assert_true(is_category_name_ending_here, "# END")
         self.run_assert_false(is_category_name_ending_here, " # Don't END ")
+        self.run_assert_false(is_category_name_ending_here, "#cat `find -name \"*gitignore*\"` > codytest.txt")
 
     def test_is_alias(self):
         result = is_alias("alias st='git status'  ")
@@ -52,7 +54,11 @@ class TestParsingFunctions(unittest.TestCase):
 
     def test_is_single_line_bash_function(self):
         result = is_single_line_bash_function("cdwkproject() { cd $WORK_PROJECTS/$1; workon $1 ;}")
-        self.assertEqual(result, "cd $WORK_PROJECTS/$1; workon $1 ;")
+        self.assertEqual(
+            result,
+            {'name': 'cdwkproject', 'command': 'cd $WORK_PROJECTS/$1; workon $1'}
+        )
+
 
     def test_is_single_line_bash_function_for_none(self):
         result = is_single_line_bash_function(" blah blah blah")
@@ -96,6 +102,19 @@ class TestParsingFunctions(unittest.TestCase):
         }
         result = construct_full_filepath("$ONE/blah/blahhhh/$THREE/gap/$TWO", paths)
         self.assertEqual(result, "path/to/one/blah/blahhhh/threes/path/gap/the/path/of/two")
+
+    def test_grab_single_line_match(self):
+        result = grab_single_line_match("alias pushfiles='$UPDATES_SCRIPTS_PATH/update_files.py push'")
+        self.assertEqual(
+            result,
+            {'name': 'pushfiles', 'command': '$UPDATES_SCRIPTS_PATH/update_files.py push'}
+        )
+
+        result = grab_single_line_match("remakec() { rm $1; make $1 ;}")
+        self.assertEqual(
+            result,
+            {'name': 'remakec', 'command': 'rm $1; make $1'}
+        )
 
     def run_assert_equal(self, callback, the_input, expectation):
         result = callback(the_input)
