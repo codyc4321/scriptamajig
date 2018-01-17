@@ -59,9 +59,18 @@ def is_alias(text):
 
 
 def is_bash_function(text):
-    print('huh')
     rgx = r"""^(\w+)\s*[(][)]\s*[{]"""
     return parse_group(rgx, text)
+
+
+def is_single_line_bash_function(text):
+    rgx = r"""^\w+\s*[(][)]\s*[{](.*?)[}]"""
+    group = parse_group(rgx, text)
+    try:
+        return group.strip()
+    except:
+        return None
+
 
 
 def is_script(text):
@@ -96,6 +105,12 @@ def construct_full_filepath(text, filepaths_map):
 
 
 def run_parsers():
+    # they have no category, or no home
+    orphaned_commands = []
+    filepaths = []
+
+    current_category = None
+
     parsers = [
         is_category_name,
         is_alias,

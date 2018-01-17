@@ -6,6 +6,7 @@ from scriptamajig.main import (
     is_category_name_ending_here,
     is_alias,
     is_bash_function,
+    is_single_line_bash_function,
     is_script,
     is_filepath,
     gather_names_to_substitute,
@@ -49,8 +50,15 @@ class TestParsingFunctions(unittest.TestCase):
         result = is_bash_function("blah blah blah")
         self.assertIsNone(result)
 
-    def test_is_script(self):
+    def test_is_single_line_bash_function(self):
+        result = is_single_line_bash_function("cdwkproject() { cd $WORK_PROJECTS/$1; workon $1 ;}")
+        self.assertEqual(result, "cd $WORK_PROJECTS/$1; workon $1 ;")
 
+    def test_is_single_line_bash_function_for_none(self):
+        result = is_single_line_bash_function(" blah blah blah")
+        self.assertIsNone(result)
+
+    def test_is_script(self):
         self.run_assert_equal(
             is_script,
             "alias nsh='$CODE_META_SCRIPTS_PATH/newshell.sh'",
