@@ -14,7 +14,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 bashprofile_path = os.path.join(dir_path, "bashprofile.sh")
 
 lines = read_lines(bashprofile_path)
-# print(lines)
 
 
 MAPPER = {}
@@ -23,9 +22,6 @@ MAPPER = {}
 def parse_group(rgx, text):
     match = re.search(rgx, text)
     # match.group() will throw an error if empty
-    print(match)
-    print(text)
-    print(match.groups())
     try:
         return match.groups()[0]
     except:

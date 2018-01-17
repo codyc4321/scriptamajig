@@ -1,6 +1,7 @@
 import unittest
 
 from scriptamajig.main import (
+    parse_group,
     is_category_name,
     is_category_name_ending_here,
     is_alias,
@@ -9,6 +10,14 @@ from scriptamajig.main import (
 
 
 class TestParsingFunctions(unittest.TestCase):
+
+    def test_parse_group_finds_group(self):
+        result = parse_group(r"^\s*[#]\s*(.*?)[*]", "# GIT*")
+        self.assertEqual(result, "GIT")
+
+    def test_parse_group_returns_None_when_fail(self):
+        result = parse_group(r"^\s*[#]\s*(.*?)[*]", "ELEPHANT")
+        self.assertIsNone(result)
 
     def test_is_category_name(self):
         self.run_assert_equal(is_category_name, "# GIT*", "GIT")
