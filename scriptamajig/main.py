@@ -61,7 +61,6 @@ def is_alias(text):
 def is_bash_function(text):
     print('huh')
     rgx = r"""^(\w+)\s*[(][)]\s*[{]"""
-    # match = re.search(rgx, text)
     return parse_group(rgx, text)
 
 

@@ -37,6 +37,10 @@ class TestParsingFunctions(unittest.TestCase):
         result = is_bash_function("cdproject() { cd $HOME/projects/$1; workon $1 ;}")
         self.assertEqual(result,  "cdproject")
 
+    def test_is_bash_function_for_none(self):
+        result = is_bash_function("blah blah blah")
+        self.assertIsNone(result)
+
     def run_assert_equal(self, callback, the_input, expectation):
         result = callback(the_input)
         self.assertEqual(result, expectation)
