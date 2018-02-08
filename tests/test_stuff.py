@@ -1,6 +1,6 @@
 import unittest
 
-from scriptamajig.main import (
+from scriptamajig.utils.parsing_utils import (
     parse_group,
     is_category_name,
     is_category_name_ending_here,
@@ -62,7 +62,6 @@ class TestParsingFunctions(unittest.TestCase):
             result,
             {'name': 'cdwkproject', 'command': 'cd $WORK_PROJECTS/$1; workon $1'}
         )
-
 
     def test_is_single_line_bash_function_for_none(self):
         result = is_single_line_bash_function(" blah blah blah")

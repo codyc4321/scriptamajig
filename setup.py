@@ -11,4 +11,9 @@ setup(
     packages=['scriptamajig'],
     install_requires=[],
     zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'scriptamajig = scriptamajig.__main__:main',
+        ]
+    },
 )
